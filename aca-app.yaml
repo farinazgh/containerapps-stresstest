@@ -1,0 +1,40 @@
+type: Microsoft.App/containerApps
+properties:
+  managedEnvironmentId: /subscriptions/5cedfc94-4751-491a-94d7-5870384583c9/resourceGroups/lunarg/providers/Microsoft.App/managedEnvironments/luna-aca-env
+  configuration:
+    activeRevisionsMode: Multiple
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 80
+      traffic:
+        - latestRevision: true
+          weight: 100
+      transport: Auto
+  template:
+    revisionSuffix: myrevision
+    containers:
+      - image: nginx:latest
+        name: nginx
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+      - image: polinux/stress
+        name: cpu-load-generator
+        command:
+          - /bin/sh
+          - -c
+          - 'while true; do echo "Generating load..."; stress --cpu 1 --timeout 60; echo "Sleeping..."; sleep 10; done'
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+    scale:
+      minReplicas: 1
+      maxReplicas: 10
+      rules:
+        - name: cpu-scaler
+          custom:
+            type: cpu
+            metadata:
+              type: "Utilization"
+              value: "30"
