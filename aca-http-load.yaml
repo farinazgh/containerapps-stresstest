@@ -1,0 +1,48 @@
+type: Microsoft.App/containerApps
+properties:
+  managedEnvironmentId: /subscriptions/5cedfc94-4751-491a-94d7-5870384583c9/resourceGroups/lunarg/providers/Microsoft.App/managedEnvironments/luna-aca-env
+  configuration:
+    activeRevisionsMode: Multiple
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 80
+      traffic:
+        - latestRevision: true
+          weight: 100
+      transport: Auto
+  template:
+    revisionSuffix: myrevision
+    containers:
+      - image: nginx:latest
+        name: nginx
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+#      - image: alpine
+#        name: load-generator
+#        command:
+#          - /bin/sh
+#          - -c
+#          - |
+#            apk update && apk add --no-cache curl
+#            while true; do
+#              echo "Generating concurrent HTTP load..."
+#              for i in $(seq 1 100); do
+#                curl -s http://luna-aca.lemondune-ccd9f65a.northeurope.azurecontainerapps.io >/dev/null &
+#              done
+#              wait
+#              sleep 0.1
+#            done
+#        resources:
+#          cpu: 0.25
+#          memory: 0.5Gi
+#does not pass through ingress that's why does not generate load
+    scale:
+      minReplicas: 1
+      maxReplicas: 10
+      rules:
+        - name: http-scaler
+          http:
+            metadata:
+              concurrentRequests: '5'
